@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		4769C1011C40FC05006CCDDE /* FastGraph */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FastGraph; sourceTree = BUILT_PRODUCTS_DIR; };
 		4769C1041C40FC05006CCDDE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ncaa_final.txt; path = ../../Python/ncaa_final.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +58,7 @@
 		4769C1031C40FC05006CCDDE /* FastGraph */ = {
 			isa = PBXGroup;
 			children = (
+				4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */,
 				4769C1041C40FC05006CCDDE /* main.cpp */,
 			);
 			path = FastGraph;
@@ -142,6 +144,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_X86_VECTOR_INSTRUCTIONS = avx2;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -184,6 +187,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_X86_VECTOR_INSTRUCTIONS = avx2;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				"DEBUG_INFORMATION_FORMAT[sdk=*]" = "dwarf-with-dsym";
@@ -236,6 +240,7 @@
 				4769C10A1C40FC05006CCDDE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
