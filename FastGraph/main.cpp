@@ -37,22 +37,21 @@ static inline std::string &trim(std::string &s) {
   return ltrim(rtrim(s));
 }
 
-#define NDEBUG
+//#define NDEBUG
 #include <cassert>
 
 constexpr static const uint8_t MaxDegree = 15;
-constexpr static const uint16_t MaxNodes = 768;
+constexpr static const uint16_t MaxNodes = 704;
+
+typedef uint8_t NodeSet[MaxNodes];
 
 // The idea is to fit easily in the 32 KB L1 data cache on a Haswell core.
 
 /*
  TODOs:
- 1. Ingest the actual NCAA2015 Massey data. This is its own best test case for profiling. It will probably be different from my experiments so far.
  2. For gene mutation, replace the series of has_path calls with a single enumeration from target to potential sources
  3. For gene crossover, dynamic programming: keep the reachable sets from previous calls to be used in subsequent calls, after shortening the gene to consider sibling of the previous edges
- 4. Look up best (Boost graph lib?) C++ breadth-first search implementations. Maybe networkx's core strategy is inherently bad? Consider just going one way, for example.
  5. Implement remaining missing features: (A) extending front instead of back (B) local optimization of best/all genes
- 6. Do keep testing the skip-1,2 circle graph, though, to make sure we optimize it
  */
 
 struct Node {
@@ -163,8 +162,6 @@ struct FastGraph {
 //      node.print();
 //      x += 1;
 //    }
-    
-    // exit(0);
   }
   
 //  void create_skip_cycle(uint16_t num_nodes) {
@@ -183,11 +180,11 @@ struct FastGraph {
   
   bool has_path(const uint16_t source,
                 const uint16_t target,
-                const std::bitset<MaxNodes>& forbidden_nodes) {
+                const unsigned char forbidden_nodes[MaxNodes]) {
     if (source == target) return true;
     
-    std::bitset<MaxNodes> forward_body;
-    std::bitset<MaxNodes> reverse_body;
+    unsigned char forward_body[MaxNodes] = {};
+    unsigned char reverse_body[MaxNodes] = {};
     forward_body[source] = true;
     reverse_body[target] = true;
     
@@ -246,63 +243,142 @@ struct FastGraph {
   }
   
   template<typename InputIterator>
-  std::bitset<MaxNodes> flatten(InputIterator begin, InputIterator end) {
-    std::bitset<MaxNodes> out;
+  void flatten(NodeSet& out, InputIterator begin, InputIterator end) {
     for (auto in = begin; in != end; ++in) {
       out[*in] = true;
     }
-    return out;
   }
   
   std::vector<uint16_t> cross(uint16_t site,
-                              std::vector<uint16_t> mother,
-                              std::vector<uint16_t> father) {
-    //return mother;
-    auto m1 = mother.cbegin();
+                              const std::vector<uint16_t>& mother,
+                              const std::vector<uint16_t>& father) {
     const auto m2 = std::find(mother.cbegin(), mother.cend(), site);
     const auto f1 = std::find(father.cbegin(), father.cend(), site) + 1;
-    auto f2 = father.cend();
     
-    assert(std::find(mother.cbegin(), mother.cend(), site) != mother.cend());
-    assert(std::find(father.cbegin(), father.cend(), site) != father.cend());
-    
-    auto sa = flatten(m1, m2);
-    auto sb = flatten(f1, f2);
-    
-    // Start shortening m and f until we can return m + site + f
-    while ((sa & sb).any()) {
-      if (m1 != m2) {
-        sa[*m1] = false;
-        m1++;
-      }
-      if (f1 != f2) {
-        f2--;
-        sb[*f2] = false;
-      }
-      
-      assert(m1 != mother.cend());
-      assert(f2 != father.cbegin());
-    }
-    
-    // Now sa represents all nodes in the prospective path.
-    sa &= sb;
+    auto m1 = m2;
+    auto f2 = f1;
+    NodeSet sa = {};
     sa[site] = true;
     
-    while (!has_path(*(f2 - 1), *m1, sa)) {
-      if (m1 != m2) {
-        sa[*m1] = false;
-        m1++;
-      }
-      if (f1 != f2) {
-        f2--;
-        sa[*f2] = false;
-      }
-      
-      assert(m1 != mother.cend());
-      assert(f2 != father.cbegin());
+    // Lengthen the shorter of m and f until the remainders are equal
+    int mother_more_room = (int)(m1 - mother.cbegin()) - (int)(father.cend() - f2);
+    while (mother_more_room < 0) {
+      assert(f2 != father.cend());
+      sa[*f2] = true;
+      f2++;
+      mother_more_room++;
+    }
+    while (mother_more_room > 0) {
+      assert(m1 != mother.cbegin());
+      m1--;
+      sa[*m1] = true;
+      mother_more_room--;
     }
     
-    //std::vector<uint16_t> out(m1, m2);
+    // Lengthen both m and f until they collide
+    while (m1 != mother.cbegin()) {
+      assert(f2 != father.cend());
+      auto mn = *(m1 - 1);
+      auto fn = *f2;
+      if (mn == fn || sa[mn] || sa[fn]) break;
+      sa[mn] = true;
+      sa[fn] = true;
+      m1--;
+      f2++;
+    }
+    
+    // Now m + site + f is as long as possible without intersecting itself.
+    // But we may need to shorten it again to be closable.
+    
+    // Copy-paste job from has_path
+    {
+      unsigned char forward_body[MaxNodes] = {};
+      unsigned char reverse_body[MaxNodes] = {};
+      uint16_t forward_fringe[MaxNodes];
+      uint16_t reverse_fringe[MaxNodes];
+      uint16_t forward_fringe_size = 0;
+      uint16_t reverse_fringe_size = 0;
+      
+      while (true) {
+        auto source = *(f2 - 1);
+        auto target = *m1;
+        auto& forbidden_nodes = sa;
+        
+        forbidden_nodes[source] = false;
+        forbidden_nodes[target] = false;
+        
+        forward_body[source] = true;
+        reverse_body[target] = true;
+        forward_fringe[forward_fringe_size] = source;
+        reverse_fringe[reverse_fringe_size] = target;
+        forward_fringe_size += 1;
+        reverse_fringe_size += 1;
+        
+        while (forward_fringe_size && reverse_fringe_size) {
+          // Regardless of the lengths of the fringes, at every step at this loop level, we must explore both at least once.
+          uint16_t this_level[MaxNodes];
+          uint16_t this_level_size = forward_fringe_size;
+          memcpy(this_level, forward_fringe, forward_fringe_size * sizeof(forward_fringe[0]));
+          forward_fringe_size = 0;
+          
+          for (uint16_t iv = 0; iv < this_level_size; ++iv) {
+            uint16_t v = this_level[iv];
+            for (auto w = nodes[v].successors_cbegin(); w != nodes[v].successors_cend(); ++w) {
+              if (!forbidden_nodes[*w]) {
+                if (reverse_body[*w]) goto found_path;
+                else if (!forward_body[*w]) {
+                  forward_fringe[forward_fringe_size] = *w;
+                  forward_fringe_size++;
+                  
+                  forward_body[*w] = true;
+                }
+              }
+            }
+          }
+          
+          this_level_size = reverse_fringe_size;
+          memcpy(this_level, reverse_fringe, reverse_fringe_size * sizeof(reverse_fringe[0]));
+          reverse_fringe_size = 0;
+          
+          for (uint16_t iv = 0; iv < this_level_size; ++iv) {
+            uint16_t v = this_level[iv];
+            for (auto w = nodes[v].predecessors_cbegin(); w != nodes[v].predecessors_cend(); ++w) {
+              if (!forbidden_nodes[*w]) {
+                if (forward_body[*w]) goto found_path;
+                else if (!reverse_body[*w]) {
+                  reverse_fringe[reverse_fringe_size] = *w;
+                  reverse_fringe_size++;
+                  
+                  reverse_body[*w] = true;
+                }
+              }
+            }
+          }
+        }
+        
+        assert(m1 + 1 <= m2);
+        assert(f1 <= f2 - 1);
+        
+        //Exhausted fringes but didn't find path. Better rolllll back.
+        m1++;
+        f2--;
+        assert(mother.cbegin() <= m1);
+        assert(m1 <= m2);
+        assert(m2 <= mother.cend());
+        assert(father.cbegin() <= f1);
+        assert(f1 <= f2);
+        assert(f2 <= father.cend());
+      }
+    }
+    
+  found_path:
+    assert(mother.cbegin() <= m1);
+    assert(m1 <= m2);
+    assert(m2 <= mother.cend());
+    assert(father.cbegin() <= f1);
+    assert(f1 <= f2);
+    assert(f2 <= father.cend());
+    
     std::vector<uint16_t> out;
     out.reserve((m2 - m1) + 1 + (f2 - f1) + 1); // The last +1 is to accomodate future mutations.
     out.insert(out.cend(), m1, m2);
@@ -317,9 +393,10 @@ struct FastGraph {
     
     // Pre-populate using all edges in the graph that have back-paths
     std::vector<std::vector<uint16_t>> population;
+    unsigned char empty[MaxNodes] = {};
     for (uint16_t i = 0; i < nodes.size(); ++i) {
       for (auto pj = nodes[i].successors_cbegin(); pj != nodes[i].successors_cend(); ++pj) {
-        if (has_path(*pj, i, std::bitset<MaxNodes>())) {
+        if (has_path(*pj, i, empty)) {
           auto edge = {i, *pj};
           population.emplace_back(edge);
         }
@@ -352,19 +429,27 @@ struct FastGraph {
       
       // Try adding random edges
       for (std::vector<uint16_t>& gene: population) {
-        std::vector<uint16_t> potential_additions;
-        
-        // TODO: This only adds forward. Also add backward at random.
-        const uint16_t i = gene.back();
-        auto flat = flatten(gene.cbegin(), gene.cend());
-        for (auto pj = nodes[i].successors_cbegin(); pj != nodes[i].successors_cend(); ++pj) {
-          if (!flat[*pj] && has_path(*pj, gene.front(), flatten(gene.cbegin() + 1, gene.cend()))) {
-            potential_additions.push_back(*pj);
+        while (true) {
+          std::vector<uint16_t> potential_additions;
+          
+          // TODO: This only adds forward. Also add backward at random.
+          const uint16_t i = gene.back();
+          NodeSet flat = {}; flatten(flat, gene.cbegin(), gene.cend());
+          for (auto pj = nodes[i].successors_cbegin(); pj != nodes[i].successors_cend(); ++pj) {
+            if (!flat[*pj]) {
+              flat[gene.front()] = false;
+              if (has_path(*pj, gene.front(), flat)) {
+                potential_additions.push_back(*pj);
+              }
+            }
           }
-        }
-        if (!potential_additions.empty()) {
-          std::uniform_int_distribution<uint16_t> chooser(0, potential_additions.size() - 1);
-          gene.push_back(potential_additions[chooser(random_engine)]);
+          if (!potential_additions.empty()) {
+            std::uniform_int_distribution<uint16_t> chooser(0, potential_additions.size() - 1);
+            gene.push_back(potential_additions[chooser(random_engine)]);
+          }
+          else {
+            break;
+          }
         }
       }
       
