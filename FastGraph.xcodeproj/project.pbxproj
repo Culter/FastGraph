@@ -26,6 +26,15 @@
 		4769C1011C40FC05006CCDDE /* FastGraph */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FastGraph; sourceTree = BUILT_PRODUCTS_DIR; };
 		4769C1041C40FC05006CCDDE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ncaa_final.txt; path = ../../Python/ncaa_final.txt; sourceTree = "<group>"; };
+		4769C10D1C463C91006CCDDE /* Node.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
+		4769C1101C463E6E006CCDDE /* FastGraph.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FastGraph.h; sourceTree = "<group>"; };
+		4769C1111C463ED7006CCDDE /* string_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_util.h; sourceTree = "<group>"; };
+		4769C1131C463F44006CCDDE /* io_util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = io_util.hpp; sourceTree = "<group>"; };
+		4769C1151C4641E6006CCDDE /* gene_operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gene_operations.h; sourceTree = "<group>"; };
+		4769C1161C46420A006CCDDE /* NodeSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeSet.h; sourceTree = "<group>"; };
+		4769C1171C46432F006CCDDE /* graph_operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = graph_operations.h; sourceTree = "<group>"; };
+		4769C12B1C48E609006CCDDE /* Gene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
+		4769C12C1C48E799006CCDDE /* evolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = evolution.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +68,15 @@
 			isa = PBXGroup;
 			children = (
 				4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */,
+				4769C10D1C463C91006CCDDE /* Node.h */,
+				4769C1161C46420A006CCDDE /* NodeSet.h */,
+				4769C1101C463E6E006CCDDE /* FastGraph.h */,
+				4769C12B1C48E609006CCDDE /* Gene.h */,
+				4769C1111C463ED7006CCDDE /* string_util.h */,
+				4769C1131C463F44006CCDDE /* io_util.hpp */,
+				4769C1171C46432F006CCDDE /* graph_operations.h */,
+				4769C1151C4641E6006CCDDE /* gene_operations.h */,
+				4769C12C1C48E799006CCDDE /* evolution.h */,
 				4769C1041C40FC05006CCDDE /* main.cpp */,
 			);
 			path = FastGraph;
@@ -201,6 +219,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
