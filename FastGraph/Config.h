@@ -20,6 +20,6 @@ constexpr int k_population_multiplier = 1;
 // Cosmetic changes
 constexpr bool k_print_records = true;
 constexpr int k_report_record_period = 100;
-constexpr uint32_t k_max_generations = UINT32_MAX;
+constexpr uint32_t k_max_generations = 5000; //UINT32_MAX;
 
 #endif /* Config_h */

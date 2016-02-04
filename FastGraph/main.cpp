@@ -15,13 +15,6 @@
 #include "graph_operations.h"
 #include "evolution.h"
 
-/*
- TODOs:
- 2. For gene mutation, replace the series of has_path calls with a single enumeration from target to potential sources
- 3. For gene crossover, dynamic programming: keep the reachable sets from previous calls to be used in subsequent calls, after shortening the gene to consider sibling of the previous edges
- 5. Implement remaining missing features: (A) extending front instead of back (B) local optimization of best/all genes
- */
-
 void test_cross() {
   auto g = cycle<uint16_t, uint8_t, 15>(16);
   Gene<uint16_t> mother = std::vector<uint16_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};

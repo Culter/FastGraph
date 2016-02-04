@@ -188,26 +188,39 @@ std::vector<Gene<TIndex>> get_reversible_edges(const FastGraph<Node<TIndex, TDeg
   return population;
 }
 
-template<typename TIndex, typename TDegree, size_t MaxDegree>
-void evolve(FastGraph<Node<TIndex, TDegree, MaxDegree>>& g) {
-  std::mt19937 random_engine(k_random_seed);
-  
+template<typename TIndex>
+struct Evolver {
+  std::mt19937 rng;
   std::vector<Gene<TIndex>> population;
-  if (k_refresh_edge_count < 1) {
-    population = get_reversible_edges(g, random_engine);
-  }
+  Gene<TIndex> longest;
+};
+
+template<typename TIndex>
+void merge(Evolver<TIndex>& target, Evolver<TIndex>& victim) {
+  target.population.insert(target.population.end(), victim.population.cbegin(), victim.population.cend());
+  victim.population.clear();
   
-  while (true) {
+  if (victim.longest.size() > target.longest.size()) {
+    target.longest = victim.longest;
+  }
+  victim.longest.clear();
+}
+
+template<typename TIndex, typename TDegree, size_t MaxDegree>
+void evolve(FastGraph<Node<TIndex, TDegree, MaxDegree>>& g,
+            Evolver<TIndex>& evolver,
+            uint32_t max_generations) {
+  for (uint32_t generation = 1; generation <= max_generations; ++generation) {
     // Refresh gene pool
     for (int y = 0; y < k_refresh_edge_count; ++y) {
-      auto refresh = get_reversible_edges(g, random_engine);
-      population.insert(population.end(), refresh.cbegin(), refresh.cend());
+      auto refresh = get_reversible_edges(g, evolver.rng);
+      evolver.population.insert(evolver.population.end(), refresh.cbegin(), refresh.cend());
     }
     
     // Pre-compute which sites are touched by which genes
     std::vector<std::vector<TIndex>> site_to_gene_pool(g.nodes.size());
-    for (int igene = 0; igene < population.size(); ++igene) {
-      for (const TIndex isite: population[igene].path) {
+    for (int igene = 0; igene < evolver.population.size(); ++igene) {
+      for (const TIndex isite: evolver.population[igene].path) {
         site_to_gene_pool[isite].push_back(igene);
       }
     }
@@ -222,8 +235,8 @@ void evolve(FastGraph<Node<TIndex, TDegree, MaxDegree>>& g) {
           std::uniform_int_distribution<TIndex> gene_chooser(0, candidates.size() - 1);
           
           for (int x = 0; x < k_population_multiplier; ++x) {
-            Gene<TIndex>& mother = population[candidates[gene_chooser(random_engine)]];
-            Gene<TIndex>& father = population[candidates[gene_chooser(random_engine)]];
+            Gene<TIndex>& mother = evolver.population[candidates[gene_chooser(evolver.rng)]];
+            Gene<TIndex>& father = evolver.population[candidates[gene_chooser(evolver.rng)]];
             
             //          auto test1 = cross_reference(g, isite, mother, father);
             //          auto test2 = cross_faster(g, isite, mother, father);
@@ -234,43 +247,54 @@ void evolve(FastGraph<Node<TIndex, TDegree, MaxDegree>>& g) {
             //          }
             
             if (k_close_all_genes) {
-              rotate(g, mother, random_engine);
-              rotate(g, father, random_engine);
+              rotate(g, mother, evolver.rng);
+              rotate(g, father, evolver.rng);
             }
             
             next_population.push_back(cross_faster(g, isite, mother, father));
           }
         }
       }
-      population = std::move(next_population);
+      evolver.population = std::move(next_population);
     }
     
     // Perform mutations
-    for (auto& gene: population) {
+    for (auto& gene: evolver.population) {
       if (k_close_all_genes) {
-        mutate_dfs(g, gene, random_engine);
-        rotate(g, gene, random_engine);
+        mutate_dfs(g, gene, evolver.rng);
+        rotate(g, gene, evolver.rng);
       }
       else {
-        mutate_faster(g, gene, random_engine);
+        mutate_faster(g, gene, evolver.rng);
       }
     }
     
-    // Dump output.
-    static size_t record = 0;
-    for (const auto& gene: population) {
-      if (gene.path.size() > record) {
-        if (k_print_records) print(g, gene);
-        record = gene.path.size();
+    // Record keeping
+    for (const auto& gene: evolver.population) {
+      if (gene.path.size() > evolver.longest.path.size()) {
+        evolver.longest = gene;
       }
     }
-    
-    static uint32_t generation = 0;
-    generation += 1;
-    if (generation % k_report_record_period == 0) {
-      std::cout << "Generation " << generation << ": best length " << record << std::endl;
+  }
+}
+
+template<typename TIndex, typename TDegree, size_t MaxDegree>
+void evolve(FastGraph<Node<TIndex, TDegree, MaxDegree>>& g) {
+  Evolver<TIndex> evolver;
+  evolver.rng.seed(k_random_seed);
+  
+  if (k_refresh_edge_count < 1) {
+    evolver.population = get_reversible_edges(g, evolver.rng);
+  }
+  
+  size_t record = 0;
+  for (uint32_t generation = 0; generation < k_max_generations; generation += k_report_record_period) {
+    evolve(g, evolver, k_report_record_period);
+    if (evolver.longest.path.size() > record) {
+      if (k_print_records) print(g, evolver.longest);
+      record = evolver.longest.path.size();
     }
-    if (generation >= k_max_generations) break;
+    std::cout << "Generation " << generation << ": best length " << record << std::endl;
   }
 }
 
