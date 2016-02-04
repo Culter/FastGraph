@@ -35,6 +35,7 @@
 		4769C1171C46432F006CCDDE /* graph_operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = graph_operations.h; sourceTree = "<group>"; };
 		4769C12B1C48E609006CCDDE /* Gene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
 		4769C12C1C48E799006CCDDE /* evolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = evolution.h; sourceTree = "<group>"; };
+		47DF3B9B1C631DAB004ED52D /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +79,7 @@
 				4769C1151C4641E6006CCDDE /* gene_operations.h */,
 				4769C12C1C48E799006CCDDE /* evolution.h */,
 				4769C1041C40FC05006CCDDE /* main.cpp */,
+				47DF3B9B1C631DAB004ED52D /* Config.h */,
 			);
 			path = FastGraph;
 			sourceTree = "<group>";
