@@ -99,9 +99,9 @@ int main() {
   
   FastGraph<Node<uint16_t, uint8_t, 15>> g;
   read_massey(g);
-  std::cout << g.nodes.size() << " teams in input" << std::endl;
+  std::cout << g.nodes.size() << " nodes in input" << std::endl;
   restrict_to_scc(g, (uint16_t)0);
-  std::cout << g.nodes.size() << " teams in SCC" << std::endl;
+  std::cout << g.nodes.size() << " nodes in SCC" << std::endl;
 //  exit(0);
   evolve(g);
 }

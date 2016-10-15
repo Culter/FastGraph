@@ -9,7 +9,7 @@
 #ifndef NodeSet_h
 #define NodeSet_h
 
-// Next multiple of 64 greater than 671, the number of NCAA teams in 2015
+// Next multiple of 64 greater than 671
 constexpr static const uint16_t MaxNodes = 704;
 
 // Two bytes per slot seems to be the fastest, at least in the tests I've run.
