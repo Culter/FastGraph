@@ -12,26 +12,53 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "FastGraph.h"
 #include "io_util.hpp"
 #include "string_util.h"
 
-template<typename TNode>
-void read_massey(FastGraph<TNode>& g) {
-  std::ifstream infile("/Users/culter/Documents/Python/ncaa_final.txt");
+std::unordered_map<std::string, std::string> load_csv() {
+  std::unordered_map<std::string, std::string> map;
+  
+  std::ifstream infile;
+  infile.open("names.csv");
+  
   std::string line;
   while (std::getline(infile, line))
   {
-    std::string node_name_a(line.cbegin() + 12, line.cbegin() + 37);
-    //std::string score_a(line.cbegin() + 37, line.cbegin() + 39);
-    std::string node_name_b(line.cbegin() + 41, line.cbegin() + 66);
-    //std::string score_b(line.cbegin() + 66, line.cbegin() + 68);
+    auto pos = line.find_first_of(',');
+    std::string key(line.cbegin(), line.cbegin() + pos);
+    std::string value(line.cbegin() + pos + 1, line.cend() - 1);
+    map[key] = value;
     
-    node_name_a = trim(node_name_a);
-    node_name_b = trim(node_name_b);
-    //int nscore_a = atoi(score_a.c_str());
-    //int nscore_b = atoi(score_b.c_str());
+//    std::cout << key << " will be renamed as " << value << std::endl;
+  }
+  
+  return map;
+}
+
+template<typename TNode>
+void read_massey(FastGraph<TNode>& g) {
+  auto name_map = load_csv();
+  
+  std::ifstream infile;
+//  infile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+  infile.open("edges.txt");
+//  std::cout << "Hello???" << std::endl;
+  std::string line;
+  while (std::getline(infile, line))
+  {
+//    std::cout << line << std::endl;
+    std::string node_name_a(line.cbegin() + 12, line.cbegin() + 37);
+    std::string score_a(line.cbegin() + 37, line.cbegin() + 39);
+    std::string node_name_b(line.cbegin() + 41, line.cbegin() + 66);
+    std::string score_b(line.cbegin() + 66, line.cbegin() + 68);
+    
+    node_name_a = name_map[trim(node_name_a)];
+    node_name_b = name_map[trim(node_name_b)];
+    int nscore_a = atoi(score_a.c_str());
+    int nscore_b = atoi(score_b.c_str());
     
     auto node_a = std::find(g.names.cbegin(), g.names.cend(), node_name_a);
     if (node_a == g.names.cend())
@@ -53,6 +80,12 @@ void read_massey(FastGraph<TNode>& g) {
     
     g.nodes[node_index_a].succ_push(node_index_b);
     g.nodes[node_index_b].pred_push(node_index_a);
+    
+    if (nscore_a == 0 && nscore_b == 0) {
+      g.nodes[node_index_b].succ_push(node_index_a);
+      g.nodes[node_index_a].pred_push(node_index_b);
+    }
+    
     g.check();
   }
 }

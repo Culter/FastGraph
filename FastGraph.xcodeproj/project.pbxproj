@@ -25,7 +25,6 @@
 /* Begin PBXFileReference section */
 		4769C1011C40FC05006CCDDE /* FastGraph */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FastGraph; sourceTree = BUILT_PRODUCTS_DIR; };
 		4769C1041C40FC05006CCDDE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ncaa_final.txt; path = ../../Python/ncaa_final.txt; sourceTree = "<group>"; };
 		4769C10D1C463C91006CCDDE /* Node.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
 		4769C1101C463E6E006CCDDE /* FastGraph.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FastGraph.h; sourceTree = "<group>"; };
 		4769C1111C463ED7006CCDDE /* string_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_util.h; sourceTree = "<group>"; };
@@ -68,7 +67,6 @@
 		4769C1031C40FC05006CCDDE /* FastGraph */ = {
 			isa = PBXGroup;
 			children = (
-				4769C10C1C44CC0D006CCDDE /* ncaa_final.txt */,
 				4769C10D1C463C91006CCDDE /* Node.h */,
 				4769C1161C46420A006CCDDE /* NodeSet.h */,
 				4769C1101C463E6E006CCDDE /* FastGraph.h */,
@@ -231,6 +229,7 @@
 		4769C1091C40FC05006CCDDE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_X86_VECTOR_INSTRUCTIONS = sse4.2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -238,6 +237,7 @@
 		4769C10A1C40FC05006CCDDE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_X86_VECTOR_INSTRUCTIONS = sse4.2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

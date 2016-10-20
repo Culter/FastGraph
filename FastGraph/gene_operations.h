@@ -458,8 +458,23 @@ void print(const Gene<TIndex>& gene) {
 template<typename TIndex, typename TDegree, size_t MaxDegree>
 void print(const FastGraph<Node<TIndex, TDegree, MaxDegree>>& g, const Gene<TIndex>& gene) {
   std::cout << "Gene of length " << gene.path.size() << ": ";
-  for (auto node: gene.path) {
-    std::cout << node << " (" << g.names[node] << ") ";
+  for (int i = 0; i < gene.path.size(); ++i) {
+//  for (auto node: gene.path) {
+    auto node = gene.path[i];
+    auto next = gene.path[(i+1) % gene.path.size()];
+    //    std::cout << node << " (" << g.names[node] << ") ";
+        std::cout << g.names[node] << " ";
+    bool forward = (std::find(g.nodes[node].succ_cbegin(), g.nodes[node].succ_cend(), next) != g.nodes[node].succ_cend());
+    bool reverse = (std::find(g.nodes[node].pred_cbegin(), g.nodes[node].pred_cend(), next) != g.nodes[node].pred_cend());
+//    if (!forward) {
+//      throw 79;
+//    }
+    if (forward && !reverse) {
+      std::cout << "> ";
+    }
+    else if (forward && reverse) {
+      std::cout << "? ";
+    }
   }
   std::cout << std::endl;
 }
